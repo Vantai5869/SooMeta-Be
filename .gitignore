@@ -1,0 +1,30 @@
+# Node.js dependencies
+node_modules/
+
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Operating System files
+.DS_Store
+Thumbs.db
+
+# IDEs and Editors
+.vscode/
+.idea/
+*.swp
+
+# Environment variables
+.env
+
+# Cloudinary files (Optional if you want to exclude any specific files related to Cloudinary)
+uploads/
+
+# npm package lock
+package-lock.json
+
+# Optional - coverage reports from testing tools
+coverage/
