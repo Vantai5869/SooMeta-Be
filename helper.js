@@ -166,8 +166,8 @@ import fs from "fs";
 import path from "path";
 import { pipeline } from "stream/promises";
 import axios from "axios";
-
-const OUTPUT_DIR = "tmp";
+import os from 'os';
+const OUTPUT_DIR = os.tmpdir();
 
 // ✅ Hàm trích xuất videoId từ URL YouTube
 function extractVideoId(videoUrl) {
