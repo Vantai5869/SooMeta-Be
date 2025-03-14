@@ -205,7 +205,14 @@ async function downloadAudio(videoUrl) {
       }
     };
 
-    const response = await axios.request(rapidApiOptions);
+    let response;
+     response = await axios.request(rapidApiOptions);
+    while(response.data.status==='processing'){
+      console.log("===================")
+       response = await axios.request(rapidApiOptions);
+      
+    }
+   
     console.log({response})
     if (response.data.status !== "ok") {
       console.error("❌ Lỗi API RapidAPI:", response.data.msg);
@@ -227,7 +234,8 @@ async function downloadAudio(videoUrl) {
     const filePath= await downloadFileFromUrl(downloadLink)
     console.log(response.data)
 
-    return { videoId, title: response.data.title, duration:response.data.duration,  filePath };
+    const trans = await sendAudioToDeepgram(filePath)
+    return { videoId, title: response.data.title, duration:response.data.duration,  data: trans };
   } catch (error) {
     console.error("❌ Lỗi khi tải audio từ YouTube:", error);
     return null;
@@ -299,4 +307,46 @@ export const extractYouTubeId = (url) => {
   const regex = /(?:youtu\.be\/|youtube\.com\/(?:.*v=|.*\/|.*vi\/|.*embed\/))([\w-]{11})/;
   const match = url.match(regex);
   return match ? match[1] : null;
+};
+
+
+import FormData from 'form-data';
+
+export const sendAudioToDeepgram = async (filePath) => {
+    try {
+        const formData = new FormData();
+        // formData.append('file', fs.createReadStream(filePath));
+        const audioStream = fs.createReadStream(filePath);
+        const response = await axios.post(
+            'https://api.deepgram.com/v1/listen?smart_format=true&paragraphs=true&language=ko&model=nova-2',
+            audioStream,
+            {
+                headers: {
+                    ...formData.getHeaders(),
+                    'Authorization': 'Token b3e67dbe84e1ad5afb797643f5136c33cec7022a',
+                },
+            }
+        );
+
+        const newSentences = response.data.results.channels[0].alternatives[0].paragraphs.paragraphs.reduce((acc, current) => {
+            return acc.concat(current.sentences);
+        }, []);
+
+
+        const newWords = response.data.results.channels[0].alternatives[0].words;
+        const sentencesWithWords = newSentences.map((sentence) => {
+            const sentenceWords = newWords.filter((word) => word.start >= sentence.start && word.end <= sentence.end);
+            return {
+                sentence: sentence.text,
+                start: sentence.start,
+                end: sentence.end,
+                words: sentenceWords,
+            };
+        });
+
+        return sentencesWithWords;
+    } catch (error) {
+        console.error('Error sending audio to Deepgram: ',  error.response ? error.response.data : error.message);
+        return []
+    } 
 };

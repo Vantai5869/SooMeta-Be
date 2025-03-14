@@ -1,6 +1,6 @@
 import express from 'express';
 import Transcription from '../models/Transcription.js';
-import { deleteFile, extractYouTubeId, getMP3Info } from '../helper.js';
+import { deleteFile, extractYouTubeId, getMP3Info, sendAudioToDeepgram } from '../helper.js';
 import OpenAI from 'openai';
 import fs from 'fs';
 
@@ -32,10 +32,10 @@ router.post('/', async (req, res) => {
             }
         }
 
-        let existingTranscription = await Transcription.findOne({ ytVideoId });
-        if (existingTranscription) {
-            return res.status(200).json(existingTranscription);
-        }
+        // let existingTranscription = await Transcription.findOne({ ytVideoId });
+        // if (existingTranscription) {
+        //     return res.status(200).json(existingTranscription);
+        // }
 
         if (type === 'youtube') {
             const youtubeMP3Info = await getMP3Info(mp3Url);
@@ -46,44 +46,47 @@ router.post('/', async (req, res) => {
             } else {
                 return res.status(400).json({ error: 'Không thể tải file âm thanh từ YouTube.' });
             }
-        } else {
-            filePath = await downloadFileFromUrl(mp3Url);
-            if (!filePath) {
-                return res.status(400).json({ error: 'Không thể tải file âm thanh từ URL trực tiếp.' });
-            }
-            title = inputTitle || 'Unknown Title';
-        }
+            const newTranscription = new Transcription({ ytVideoId, type, title, duration, data: youtubeMP3Info.data, createBy, isPublic,url, deviceId });
+            await newTranscription.save();
+            res.status(201).json(newTranscription);
+        } 
+        
+        // else {
+        //     filePath = await downloadFileFromUrl(mp3Url);
+        //     if (!filePath) {
+        //         return res.status(400).json({ error: 'Không thể tải file âm thanh từ URL trực tiếp.' });
+        //     }
+        //     title = inputTitle || 'Unknown Title';
+        // }
 
-        console.log('Processing transcription with OpenAI Whisper...');
-        const transcription = await openai.audio.transcriptions.create({
-            file: fs.createReadStream(filePath),
-            model: 'whisper-1',
-            response_format: 'verbose_json',
-            timestamp_granularities: ['segment', 'word'],
-        });
+        // console.log('Processing transcription with OpenAI Whisper...');
+        // const transcription = await openai.audio.transcriptions.create({
+        //     file: fs.createReadStream(filePath),
+        //     model: 'whisper-1',
+        //     response_format: 'verbose_json',
+        //     timestamp_granularities: ['segment', 'word'],
+        // });
 
-        const filteredData = {
-            segments: transcription.segments.map(segment => ({
-                start: segment.start,
-                end: segment.end,
-                text: segment.text,
-            })),
-            words: transcription.words.map(word => ({
-                word: word.word,
-                start: word.start,
-                end: word.end,
-            }))
-        };
+        // const filteredData = {
+        //     segments: transcription.segments.map(segment => ({
+        //         start: segment.start,
+        //         end: segment.end,
+        //         text: segment.text,
+        //     })),
+        //     words: transcription.words.map(word => ({
+        //         word: word.word,
+        //         start: word.start,
+        //         end: word.end,
+        //     }))
+        // };
 
-        const newTranscription = new Transcription({ ytVideoId, type, title, duration, data: filteredData, createBy });
-        await newTranscription.save();
-        res.status(201).json(newTranscription);
+       
     } catch (error) {
         res.status(500).json({ error: 'Internal Server Error', details: error.message });
     } finally {
-        if (filePath) {
-            deleteFile(filePath);
-        }
+        // if (filePath) {
+        //     deleteFile(filePath);
+        // }
     }
 });
 
