@@ -316,7 +316,7 @@ export const sendAudioToDeepgram = async (filePath) => {
     // formData.append('file', fs.createReadStream(filePath));
     const audioStream = fs.createReadStream(filePath);
     const response = await axios.post(
-      'https://api.deepgram.com/v1/listen?utterances=true&utt_split=0.5&smart_format=true&paragraphs=true&language=ko&model=whisper&numerals=true',
+      'https://api.deepgram.com/v1/listen?paragraphs=true&utterances=true&language=ko&model=whisper',
       audioStream,
       {
         headers: {
@@ -326,23 +326,20 @@ export const sendAudioToDeepgram = async (filePath) => {
       }
     );
 
-    const newSentences = response.data.results.channels[0].alternatives[0].paragraphs.paragraphs.reduce((acc, current) => {
-      return acc.concat(current.sentences);
-    }, []);
+    const newSentences = response.data.results.utterances
 
+    // const newWords = response.data.results.channels[0].alternatives[0].words;
+    // const sentencesWithWords = newSentences.map((sentence) => {
+    //   const sentenceWords = newWords.filter((word) => word.start >= sentence.start && word.end <= sentence.end);
+    //   return {
+    //     sentence: sentence.text,
+    //     start: sentence.start,
+    //     end: sentence.end,
+    //     words: sentenceWords,
+    //   };
+    // });
 
-    const newWords = response.data.results.channels[0].alternatives[0].words;
-    const sentencesWithWords = newSentences.map((sentence) => {
-      const sentenceWords = newWords.filter((word) => word.start >= sentence.start && word.end <= sentence.end);
-      return {
-        sentence: sentence.text,
-        start: sentence.start,
-        end: sentence.end,
-        words: sentenceWords,
-      };
-    });
-
-    return sentencesWithWords;
+    return newSentences;
   } catch (error) {
     console.error('Error sending audio to Deepgram: ', error.response ? error.response.data : error.message);
     return []
