@@ -270,18 +270,12 @@ export async function downloadFileFromUrl(url) {
 
     // Gửi request bằng fetch
     console.log({url})
-    const response = await fetch('http://alpha.123tokyo.xyz/get.php/b/fb/36CYsMng7ag.mp3?n=c&uT=R&uN=dGhhb2xlcDE4&h=K6l4Vfdc0f9Z0Gh1hxICKQ&s=1742009004&uT=R&uN=dGhhb2xlcDE4', {
-      headers: {
-        "Accept-Encoding": "identity",
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)",
-        "Accept": "*/*",
-      },
-    });
+    const response = await fetch(url);
 
     console.log({response})
-    // if (!response.ok) {
-    //   throw new Error(`HTTP error! Status: ${response.status}`);
-    // }
+    if (!response.ok) {
+      throw new Error(`HTTP error! Status: ${response.status}`);
+    }
 
     console.log("📤 Đang ghi file...");
 
