@@ -278,9 +278,10 @@ export async function downloadFileFromUrl(url) {
       },
     });
 
-    if (!response.ok) {
-      throw new Error(`HTTP error! Status: ${response.status}`);
-    }
+    console.log({response})
+    // if (!response.ok) {
+    //   throw new Error(`HTTP error! Status: ${response.status}`);
+    // }
 
     console.log("📤 Đang ghi file...");
 
