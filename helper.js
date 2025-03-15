@@ -269,6 +269,7 @@ export async function downloadFileFromUrl(url) {
     }
 
     // Gửi request bằng fetch
+    console.log({url})
     const response = await fetch(url, {
       headers: {
         "Accept-Encoding": "identity",
