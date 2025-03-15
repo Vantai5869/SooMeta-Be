@@ -316,7 +316,7 @@ export const sendAudioToDeepgram = async (filePath) => {
     // formData.append('file', fs.createReadStream(filePath));
     const audioStream = fs.createReadStream(filePath);
     const response = await axios.post(
-      'https://api.deepgram.com/v1/listen?utterances=true&utt_split=1.0&smart_format=true&paragraphs=true&language=ko&model=whisper&numerals=true',
+      'https://api.deepgram.com/v1/listen?utterances=true&utt_split=0.5&smart_format=true&paragraphs=true&language=ko&model=whisper&numerals=true',
       audioStream,
       {
         headers: {
