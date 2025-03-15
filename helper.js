@@ -316,12 +316,12 @@ export const sendAudioToDeepgram = async (filePath) => {
     // formData.append('file', fs.createReadStream(filePath));
     const audioStream = fs.createReadStream(filePath);
     const response = await axios.post(
-      'https://api.deepgram.com/v1/listen?smart_format=true&paragraphs=true&language=ko&model=nova-2',
+      'https://api.deepgram.com/v1/listen?utterances=true&utt_split=1.0&smart_format=true&paragraphs=true&language=ko&model=whisper&numerals=true',
       audioStream,
       {
         headers: {
           ...formData.getHeaders(),
-          'Authorization': 'Token b3e67dbe84e1ad5afb797643f5136c33cec7022a',
+          'Authorization': 'Token 9155204600563f32b848f52356912546ec8dfb41',
         },
       }
     );
