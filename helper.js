@@ -232,7 +232,7 @@ async function downloadAudio(videoUrl) {
 
     // console.log("✅ File đã tải về:", filePath);
     const filePath = await downloadFileFromUrl(downloadLink)
-    console.log(response.data)
+    // console.log(response.data)
 
     const trans = await sendAudioToDeepgram(filePath)
     return { videoId, title: response.data.title, duration: response.data.duration, data: trans };
