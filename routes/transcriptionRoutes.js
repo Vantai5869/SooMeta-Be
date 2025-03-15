@@ -107,7 +107,8 @@ router.get('/', async (req, res) => {
         }
 
         // Truy vấn Transcription với điều kiện (nếu có)
-        const transcriptions = await Transcription.find({ deviceId: deviceId });
+        const transcriptions = await Transcription.find({ deviceId: deviceId }).sort({ createdAt: -1 }) // Sắp xếp theo thứ tự mới nhất → cũ nhất
+        .limit(50);
 
         // Nếu không có transcription nào, trả về 404
         if (transcriptions.length === 0) {
