@@ -260,33 +260,32 @@ export async function getMP3Info(videoUrl) {
 export async function downloadFileFromUrl(url) {
   try {
     console.log("📥 Đang tải file từ URL:", url);
-    const fileName = `temp_audio_${Date.now()}.mp3`;
-    const filePath = path.join(OUTPUT_DIR, fileName);
 
-    // Đảm bảo thư mục đầu ra tồn tại
-    if (!fs.existsSync(OUTPUT_DIR)) {
-      fs.mkdirSync(OUTPUT_DIR, { recursive: true });
-    }
+    const filePath = `${OUTPUT_DIR}/temp_audio_${Date.now()}.mp3`;
 
-    // Gửi request bằng fetch
-    console.log({url})
-    const response = await fetch(url);
+    const response = await axios({
+      method: "GET",
+      url: url,
+      responseType: "stream", // Dùng stream để tải file
+      headers: {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)", // Giả lập trình duyệt
+        "Accept": "*/*", // Cho phép tải mọi loại dữ liệu
+      },
+      maxRedirects: 5, // Cho phép Axios theo dõi tối đa 5 lần chuyển hướng
+    });
 
-    console.log({response})
-    if (!response.ok) {
-      throw new Error(`HTTP error! Status: ${response.status}`);
+    if (response.status !== 200) {
+      throw new Error(`Lỗi tải file: Server phản hồi ${response.status} ${response.statusText}`);
     }
 
     console.log("📤 Đang ghi file...");
-
-    // Ghi file từ response body (stream)
-    const writer = fs.createWriteStream(filePath, { highWaterMark: 1024 * 1024 * 16 }); // 16MB buffer
-    await pipeline(response.body, writer);
+    const writer = fs.createWriteStream(filePath, { highWaterMark: 1024 * 1024 * 16 });
+    await pipelineAsync(response.data, writer);
 
     console.log("✅ File đã tải về:", filePath);
     return filePath;
   } catch (error) {
-    console.error("❌ Lỗi khi tải file từ URL:", error.response ? error.response.data : error.message);
+    console.error("❌ Lỗi khi tải file từ URL:", error.message);
     return null;
   }
 }
