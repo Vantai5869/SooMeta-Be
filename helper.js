@@ -287,7 +287,7 @@ export async function downloadFileFromUrl(url) {
     console.log("✅ File đã tải về:", filePath);
     return filePath;
   } catch (error) {
-    console.error("❌ Lỗi khi tải file từ URL:", error);
+    console.error("❌ Lỗi khi tải file từ URL:", error.response ? error.response.data : error.message);
     return null;
   }
 }
