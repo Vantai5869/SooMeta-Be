@@ -268,32 +268,29 @@ export async function downloadFileFromUrl(url) {
       fs.mkdirSync(OUTPUT_DIR, { recursive: true });
     }
 
-    let downloadedBytes = 0;
-    const response = await axios({
-      method: "GET",
-      url: url,
-      responseType: "stream",
+    // Gửi request bằng fetch
+    const response = await fetch(url, {
       headers: {
         "Accept-Encoding": "identity",
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)",
         "Accept": "*/*",
       },
-      // onDownloadProgress: (progressEvent) => {
-      //   const totalBytes = progressEvent.total;
-      //   downloadedBytes = progressEvent.loaded;
-      //   const percentCompleted = Math.round((downloadedBytes / totalBytes) * 100);
-      //   console.log(`Download progress: ${percentCompleted}%`);
-      // },
     });
 
-    console.log(response)
+    if (!response.ok) {
+      throw new Error(`HTTP error! Status: ${response.status}`);
+    }
+
+    console.log("📤 Đang ghi file...");
+
+    // Ghi file từ response body (stream)
     const writer = fs.createWriteStream(filePath, { highWaterMark: 1024 * 1024 * 16 }); // 16MB buffer
-    await pipeline(response.data, writer);
+    await pipeline(response.body, writer);
 
     console.log("✅ File đã tải về:", filePath);
     return filePath;
   } catch (error) {
-    console.error("❌ Lỗi khi tải file từ URL:", error.response ? error.response.data : error.message);
+    console.error("❌ Lỗi khi tải file từ URL:", error.message);
     return null;
   }
 }
