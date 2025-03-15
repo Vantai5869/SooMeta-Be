@@ -213,7 +213,7 @@ async function downloadAudio(videoUrl) {
       
     }
    
-    console.log({response})
+    // console.log({response})
     if (response.data.status !== "ok") {
       console.error("❌ Lỗi API RapidAPI:", response.data.msg);
       return null;
@@ -274,14 +274,15 @@ export async function downloadFileFromUrl(url) {
       url: url,
       responseType: "stream",
       headers: { "Accept-Encoding": "identity" },
-      onDownloadProgress: (progressEvent) => {
-        const totalBytes = progressEvent.total;
-        downloadedBytes = progressEvent.loaded;
-        const percentCompleted = Math.round((downloadedBytes / totalBytes) * 100);
-        console.log(`Download progress: ${percentCompleted}%`);
-      },
+      // onDownloadProgress: (progressEvent) => {
+      //   const totalBytes = progressEvent.total;
+      //   downloadedBytes = progressEvent.loaded;
+      //   const percentCompleted = Math.round((downloadedBytes / totalBytes) * 100);
+      //   console.log(`Download progress: ${percentCompleted}%`);
+      // },
     });
 
+    console.log(response)
     const writer = fs.createWriteStream(filePath, { highWaterMark: 1024 * 1024 * 16 }); // 16MB buffer
     await pipeline(response.data, writer);
 
