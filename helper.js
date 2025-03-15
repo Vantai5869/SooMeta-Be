@@ -280,7 +280,7 @@ export async function downloadFileFromUrl(url) {
 
     console.log("📤 Đang ghi file...");
     const writer = fs.createWriteStream(filePath, { highWaterMark: 1024 * 1024 * 16 });
-    await pipelineAsync(response.data, writer);
+    await pipeline(response.data, writer);
 
     console.log("✅ File đã tải về:", filePath);
     return filePath;
