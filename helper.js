@@ -145,6 +145,7 @@ export const extractYouTubeId = (url) => {
 
 
 import FormData from 'form-data';
+import { getTranscript } from "./src/functions/assemblyAI";
 
 export const sendAudioToDeepgram = async (filePath) => {
   try {
