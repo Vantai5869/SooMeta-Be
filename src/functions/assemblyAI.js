@@ -1,4 +1,4 @@
-import { AssemblyAI, TranscriptSentence} from 'assemblyai';
+import { AssemblyAI} from 'assemblyai';
 
 const client = new AssemblyAI({
     apiKey: '674d42163f3a448ea246cc6b877a4eac',

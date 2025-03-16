@@ -3,6 +3,7 @@ import Transcription from '../models/Transcription.js';
 import { deleteFile, extractYouTubeId, getMP3Info, sendAudioToDeepgram } from '../helper.js';
 import OpenAI from 'openai';
 import fs from 'fs';
+import { getTranscript } from '../src/functions/assemblyAI.js';
 
 const router = express.Router();
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
