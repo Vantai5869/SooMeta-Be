@@ -326,23 +326,24 @@ export const sendAudioToDeepgram = async (filePath) => {
       }
     );
 
-    const newSentences = response.data.results.channels[0].alternatives[0].paragraphs.paragraphs.reduce((acc, current) => {
-      return acc.concat(current.sentences);
-    }, []);
+    // const newSentences = response.data.results.channels[0].alternatives[0].paragraphs.paragraphs.reduce((acc, current) => {
+    //   return acc.concat(current.sentences);
+    // }, []);
+    const newSentences = response.data.results.utterances;
 
+    // const newWords = response.data.results.channels[0].alternatives[0].words;
+    // const sentencesWithWords = newSentences.map((sentence) => {
+    //   const sentenceWords = newWords.filter((word) => word.start >= sentence.start && word.end <= sentence.end);
+    //   return {
+    //     sentence: sentence.text,
+    //     start: sentence.start,
+    //     end: sentence.end,
+    //     words: sentenceWords,
+    //   };
+    // });
 
-    const newWords = response.data.results.channels[0].alternatives[0].words;
-    const sentencesWithWords = newSentences.map((sentence) => {
-      const sentenceWords = newWords.filter((word) => word.start >= sentence.start && word.end <= sentence.end);
-      return {
-        sentence: sentence.text,
-        start: sentence.start,
-        end: sentence.end,
-        words: sentenceWords,
-      };
-    });
-
-    return sentencesWithWords;
+    // return sentencesWithWords;
+    return newSentences;
   } catch (error) {
     console.error('Error sending audio to Deepgram: ', error.response ? error.response.data : error.message);
     return []
