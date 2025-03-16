@@ -11,10 +11,13 @@ const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 router.post('/', async (req, res) => {
     let filePath, title, duration;
     try {
-        const { type, mp3Url, createBy, title: inputTitle, isPublic, data, duration: duration1, url, deviceId } = req.body;
+        // mp3Url la url youtube
+        // url la url audio/video cloud
+        const { type, mp3Url, createBy, title: inputTitle, isPublic, duration: duration1, url, deviceId } = req.body;
 
         // neu la audio/mp3 thi luu luon
         if (type === 'mp3'|| type ==="mp4") {
+            let data = getTranscript(url)
             const newAudioTranscription = new Transcription({type, title: inputTitle, duration: duration1, data, createBy, isPublic,url, deviceId });
             await newAudioTranscription.save();
             return res.status(201).json(newAudioTranscription);
@@ -25,19 +28,12 @@ router.post('/', async (req, res) => {
         }
 
         let ytVideoId = null;
+
         if (type === 'youtube') {
             ytVideoId = extractYouTubeId(mp3Url);
             if (!ytVideoId) {
                 return res.status(400).json({ error: 'Invalid YouTube URL' });
             }
-        }
-
-        // let existingTranscription = await Transcription.findOne({ ytVideoId });
-        // if (existingTranscription) {
-        //     return res.status(200).json(existingTranscription);
-        // }
-
-        if (type === 'youtube') {
             const youtubeMP3Info = await getMP3Info(mp3Url);
             if (youtubeMP3Info) {
                 filePath = youtubeMP3Info.filePath;
