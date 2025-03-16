@@ -16,7 +16,7 @@ router.post('/', async (req, res) => {
 
         // neu la audio/mp3 thi luu luon
         if (type === 'mp3'|| type ==="mp4") {
-            let data = getTranscript(url)
+            let data = await getTranscript(url)
             const newAudioTranscription = new Transcription({type, title: inputTitle, duration: duration1, data, createBy, isPublic,url, deviceId });
             await newAudioTranscription.save();
             return res.status(201).json(newAudioTranscription);
