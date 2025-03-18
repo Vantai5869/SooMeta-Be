@@ -21,7 +21,7 @@ app.use('/users', userRoutes);
 app.use('/upload', uploadRoutes);
 app.use('/transcriptions', transcriptionRoutes);
 app.use('/upload-file-cloud', uploadFileToCloudRoutes);
-app.get('/send-mail', async (req, res) => {
+app.post('/send-mail', async (req, res) => {
   const { email, code } = req.body; // Lấy email từ body của yêu cầu
 
   if (!email || !code) {
