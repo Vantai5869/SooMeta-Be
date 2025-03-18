@@ -10,9 +10,8 @@ const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 router.post('/', async (req, res) => {
     let filePath, title, duration;
     try {
-        // mp3Url la url youtube
         // url la url audio/video cloud
-        const { type, mp3Url, createBy, title: inputTitle, isPublic, duration: duration1, url, deviceId } = req.body;
+        const { type, createBy, title: inputTitle, isPublic, duration: duration1, url, deviceId } = req.body;
 
         // neu la audio/mp3 thi luu luon
         if (type === 'mp3'|| type ==="mp4") {
@@ -22,18 +21,18 @@ router.post('/', async (req, res) => {
             return res.status(201).json(newAudioTranscription);
         }
 
-        if (!type || !mp3Url) {
+        if (!type || !url) {
             return res.status(400).json({ error: 'Missing required fields' });
         }
 
         let ytVideoId = null;
 
         if (type === 'youtube') {
-            ytVideoId = extractYouTubeId(mp3Url);
+            ytVideoId = extractYouTubeId(url);
             if (!ytVideoId) {
                 return res.status(400).json({ error: 'Invalid YouTube URL' });
             }
-            const youtubeMP3Info = await getMP3Info(mp3Url);
+            const youtubeMP3Info = await getMP3Info(url);
             if (youtubeMP3Info) {
                 filePath = youtubeMP3Info.filePath;
                 title = inputTitle || youtubeMP3Info.title;
