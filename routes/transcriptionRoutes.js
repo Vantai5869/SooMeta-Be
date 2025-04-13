@@ -86,31 +86,41 @@ router.post('/', async (req, res) => {
 
 // Lấy danh sách tất cả transcriptions
 router.get('/', async (req, res) => {
-    // try {
-    //     const transcriptions = await Transcription.find();
-    //     res.json(transcriptions);
-    // } catch (error) {
-    //     res.status(500).json({ error: 'Internal Server Error', details: error.message });
-    // }
     try {
-        const { deviceId } = req.query; // Lấy deviceId từ query parameters
+        const { deviceId, page = 1 } = req.query; // Lấy deviceId và page từ query parameters
+        const limit = 8; // Số bản ghi mỗi trang
 
-        // Nếu cần thiết, có thể kiểm tra xem deviceId có tồn tại hay không
+        // Kiểm tra xem deviceId có tồn tại hay không
         if (!deviceId) {
             return res.status(400).json({ error: 'Device ID is required' });
         }
 
-        // Truy vấn Transcription với điều kiện (nếu có)
-        const transcriptions = await Transcription.find({ deviceId: deviceId }).sort({ createdAt: -1 }) // Sắp xếp theo thứ tự mới nhất → cũ nhất
-        .limit(50);
+        // Tính toán số bản ghi cần bỏ qua (skip) dựa trên trang
+        const skip = (parseInt(page) - 1) * limit;
+
+        // Truy vấn Transcription với điều kiện
+        const transcriptions = await Transcription.find({ deviceId: deviceId })
+            .sort({ createdAt: -1 }) // Sắp xếp theo thứ tự mới nhất → cũ nhất
+            .skip(skip) // Bỏ qua các bản ghi của trang trước
+            .limit(limit) // Giới hạn số bản ghi
+            .select('-data'); // Loại bỏ trường data
+
+        // Đếm tổng số bản ghi để tính tổng số trang
+        const totalRecords = await Transcription.countDocuments({ deviceId: deviceId });
+        const totalPages = Math.ceil(totalRecords / limit);
 
         // Nếu không có transcription nào, trả về 404
         if (transcriptions.length === 0) {
             return res.status(404).json({ error: 'No transcriptions found for this device' });
         }
 
-        // Trả về kết quả
-        res.json(transcriptions);
+        // Trả về kết quả kèm thông tin phân trang
+        res.json({
+            transcriptions,
+            currentPage: parseInt(page),
+            totalPages,
+            totalRecords
+        });
     } catch (error) {
         res.status(500).json({ error: 'Internal Server Error', details: error.message });
     }
