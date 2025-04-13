@@ -105,22 +105,13 @@ router.get('/', async (req, res) => {
             .limit(limit) // Giới hạn số bản ghi
             .select('-data'); // Loại bỏ trường data
 
-        // Đếm tổng số bản ghi để tính tổng số trang
-        const totalRecords = await Transcription.countDocuments({ deviceId: deviceId });
-        const totalPages = Math.ceil(totalRecords / limit);
-
         // Nếu không có transcription nào, trả về 404
         if (transcriptions.length === 0) {
             return res.status(404).json({ error: 'No transcriptions found for this device' });
         }
 
         // Trả về kết quả kèm thông tin phân trang
-        res.json({
-            transcriptions,
-            currentPage: parseInt(page),
-            totalPages,
-            totalRecords
-        });
+        res.json( transcriptions);
     } catch (error) {
         res.status(500).json({ error: 'Internal Server Error', details: error.message });
     }
