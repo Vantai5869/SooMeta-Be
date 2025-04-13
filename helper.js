@@ -196,7 +196,7 @@ const client = new AssemblyAI({
 export const getTranscript = async (audio, language_code='ko') => {
     // audio la link online/ link off
     const data = {
-        // language_code: language_code,
+        language_code: language_code,
         audio: audio
     }
 
