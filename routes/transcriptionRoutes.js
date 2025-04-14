@@ -1,6 +1,6 @@
 import express from 'express';
 import OpenAI from 'openai';
-import { deleteFile, extractYouTubeId, getMP3Info, getTranscript } from '../helper.js';
+import { deleteFile, extractYouTubeId, getMP3Info, getTranscript, getYoutubeVideoInfo } from '../helper.js';
 import Transcription from '../models/Transcription.js';
 import e from 'cors';
 
@@ -33,14 +33,13 @@ router.post('/', async (req, res) => {
             if (!ytVideoId) {
                 return res.status(400).json({ error: 'Invalid YouTube URL' });
             }
-            // const youtubeMP3Info = await getMP3Info(url);
-            // if (youtubeMP3Info) {
-            //     filePath = youtubeMP3Info.filePath;
-            //     title = inputTitle || youtubeMP3Info.title;
-            //     duration = youtubeMP3Info.duration;
-            // } else {
-            //     return res.status(400).json({ error: 'Không thể tải file âm thanh từ YouTube.' });
-            // }
+            const youtubeMP3Info = await getYoutubeVideoInfo(url);
+            if (youtubeMP3Info) {
+                title = inputTitle || youtubeMP3Info.title;
+                duration = youtubeMP3Info.duration;
+            } else {
+                return res.status(400).json({ error: 'Không thể tải file âm thanh từ YouTube.' });
+            }
             const newTranscription = new Transcription({ ytVideoId, type, title, duration, data: [], createBy, isPublic, url, deviceId });
             await newTranscription.save();
             res.status(201).json(newTranscription);

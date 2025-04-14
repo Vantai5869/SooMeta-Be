@@ -43,6 +43,8 @@ async function downloadAudio(videoUrl) {
 
     let response;
     response = await axios.request(rapidApiOptions);
+    console.log("response.data====")
+    console.log(response.data)
     while (response.data.status === 'processing') {
       console.log("===================")
       response = await axios.request(rapidApiOptions);
@@ -74,6 +76,36 @@ async function downloadAudio(videoUrl) {
     return { videoId, title: response.data.title, duration: response.data.duration, data: trans };
   } catch (error) {
     console.error("❌ Lỗi khi tải audio từ YouTube:", error);
+    return null;
+  }
+}
+
+export async function getYoutubeVideoInfo(videoUrl) {
+  try {
+    console.log("📥 Đang lấy thông tin video từ YouTube qua RapidAPI...");
+
+    const videoId = extractVideoId(videoUrl);
+    if (!videoId) {
+      throw new Error("Không thể trích xuất videoId từ URL.");
+    }
+
+    const rapidApiOptions = {
+      method: "GET",
+      url: "https://youtube-mp36.p.rapidapi.com/dl",
+      params: { id: videoId },
+      headers: {
+        "x-rapidapi-key": "f5e1f04522msh10562b05d31776bp16145djsnf23c78ea2636", // Thay thế bằng RapidAPI key của bạn
+        "x-rapidapi-host": "youtube-mp36.p.rapidapi.com"
+      }
+    };
+
+    let response;
+    response = await axios.request(rapidApiOptions);
+    console.log("response.data====")
+    console.log(response.data)
+    return response.data
+  } catch (error) {
+    console.error("❌ Lỗi khi lấy thông tin từ YouTube:", error);
     return null;
   }
 }
