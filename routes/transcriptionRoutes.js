@@ -119,7 +119,8 @@ router.put('/:id', async (req, res) => {
             if (!updatedTranscription) {
                 return res.status(404).json({ error: 'Transcription not found' });
             }
-
+            return res.json(updatedTranscription);
+            
         } else {
             return res.status(400).json({ error: 'Không thể tải file âm thanh từ YouTube.' });
         }
