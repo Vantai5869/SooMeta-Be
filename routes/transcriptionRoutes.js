@@ -112,10 +112,7 @@ router.put('/:id', async (req, res) => {
         }
         const youtubeMP3Info = await getMP3Info(url);
         if (youtubeMP3Info) {
-            filePath = youtubeMP3Info.filePath;
-            title = inputTitle || youtubeMP3Info.title;
-            duration = youtubeMP3Info.duration;
-            const updatedTranscription = await Transcription.findByIdAndUpdate(req.params.id, { ytVideoId, type, title, duration, data: youtubeMP3Info.data }, { new: false });
+            const updatedTranscription = await Transcription.findByIdAndUpdate(req.params.id, { data: youtubeMP3Info.data }, { new: false });
             if (!updatedTranscription) {
                 return res.status(404).json({ error: 'Transcription not found' });
             }
