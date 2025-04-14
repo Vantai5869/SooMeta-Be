@@ -2,6 +2,7 @@ import express from 'express';
 import OpenAI from 'openai';
 import { deleteFile, extractYouTubeId, getMP3Info, getTranscript } from '../helper.js';
 import Transcription from '../models/Transcription.js';
+import e from 'cors';
 
 const router = express.Router();
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
@@ -14,9 +15,9 @@ router.post('/', async (req, res) => {
         const { type, createBy, title: inputTitle, isPublic, duration: duration1, url, deviceId } = req.body;
 
         // neu la audio/mp3 thi luu luon
-        if (type === 'mp3'|| type ==="mp4") {
+        if (type === 'mp3' || type === "mp4") {
             let data = await getTranscript(url)
-            const newAudioTranscription = new Transcription({type, title: inputTitle, duration: duration1, data, createBy, isPublic,url, deviceId });
+            const newAudioTranscription = new Transcription({ type, title: inputTitle, duration: duration1, data, createBy, isPublic, url, deviceId });
             await newAudioTranscription.save();
             return res.status(201).json(newAudioTranscription);
         }
@@ -32,49 +33,19 @@ router.post('/', async (req, res) => {
             if (!ytVideoId) {
                 return res.status(400).json({ error: 'Invalid YouTube URL' });
             }
-            const youtubeMP3Info = await getMP3Info(url);
-            if (youtubeMP3Info) {
-                filePath = youtubeMP3Info.filePath;
-                title = inputTitle || youtubeMP3Info.title;
-                duration = youtubeMP3Info.duration;
-            } else {
-                return res.status(400).json({ error: 'Không thể tải file âm thanh từ YouTube.' });
-            }
-            const newTranscription = new Transcription({ ytVideoId, type, title, duration, data: youtubeMP3Info.data, createBy, isPublic,url, deviceId });
+            // const youtubeMP3Info = await getMP3Info(url);
+            // if (youtubeMP3Info) {
+            //     filePath = youtubeMP3Info.filePath;
+            //     title = inputTitle || youtubeMP3Info.title;
+            //     duration = youtubeMP3Info.duration;
+            // } else {
+            //     return res.status(400).json({ error: 'Không thể tải file âm thanh từ YouTube.' });
+            // }
+            const newTranscription = new Transcription({ ytVideoId, type, title, duration, data: [], createBy, isPublic, url, deviceId });
             await newTranscription.save();
             res.status(201).json(newTranscription);
-        } 
-        
-        // else {
-        //     filePath = await downloadFileFromUrl(mp3Url);
-        //     if (!filePath) {
-        //         return res.status(400).json({ error: 'Không thể tải file âm thanh từ URL trực tiếp.' });
-        //     }
-        //     title = inputTitle || 'Unknown Title';
-        // }
+        }
 
-        // console.log('Processing transcription with OpenAI Whisper...');
-        // const transcription = await openai.audio.transcriptions.create({
-        //     file: fs.createReadStream(filePath),
-        //     model: 'whisper-1',
-        //     response_format: 'verbose_json',
-        //     timestamp_granularities: ['segment', 'word'],
-        // });
-
-        // const filteredData = {
-        //     segments: transcription.segments.map(segment => ({
-        //         start: segment.start,
-        //         end: segment.end,
-        //         text: segment.text,
-        //     })),
-        //     words: transcription.words.map(word => ({
-        //         word: word.word,
-        //         start: word.start,
-        //         end: word.end,
-        //     }))
-        // };
-
-       
     } catch (error) {
         res.status(500).json({ error: 'Internal Server Error', details: error.message });
     } finally {
@@ -111,7 +82,7 @@ router.get('/', async (req, res) => {
         }
 
         // Trả về kết quả kèm thông tin phân trang
-        res.json( transcriptions);
+        res.json(transcriptions);
     } catch (error) {
         res.status(500).json({ error: 'Internal Server Error', details: error.message });
     }
@@ -132,14 +103,39 @@ router.get('/:id', async (req, res) => {
 
 // Cập nhật transcription
 router.put('/:id', async (req, res) => {
-    try {
-        const updatedTranscription = await Transcription.findByIdAndUpdate(req.params.id, req.body, { new: true });
-        if (!updatedTranscription) {
-            return res.status(404).json({ error: 'Transcription not found' });
+    const { type, url } = req.body;
+    if (!type || !url) {
+        return res.status(400).json({ error: 'Missing required fields' });
+    } else if (type === 'youtube') {
+        const ytVideoId = extractYouTubeId(url);
+        if (!ytVideoId) {
+            return res.status(400).json({ error: 'Invalid YouTube URL' });
         }
-        res.json(updatedTranscription);
-    } catch (error) {
-        res.status(500).json({ error: 'Internal Server Error', details: error.message });
+        const youtubeMP3Info = await getMP3Info(url);
+        if (youtubeMP3Info) {
+            filePath = youtubeMP3Info.filePath;
+            title = inputTitle || youtubeMP3Info.title;
+            duration = youtubeMP3Info.duration;
+            const updatedTranscription = await Transcription.findByIdAndUpdate(req.params.id, { ytVideoId, type, title, duration, data: youtubeMP3Info.data }, { new: false });
+            if (!updatedTranscription) {
+                return res.status(404).json({ error: 'Transcription not found' });
+            }
+
+        } else {
+            return res.status(400).json({ error: 'Không thể tải file âm thanh từ YouTube.' });
+        }
+    } else if (type === 'mp3' || type === "mp4") {
+        try {
+            const updatedTranscription = await Transcription.findByIdAndUpdate(req.params.id, req.body, { new: false });
+            if (!updatedTranscription) {
+                return res.status(404).json({ error: 'Transcription not found' });
+            }
+            res.json(updatedTranscription);
+        } catch (error) {
+            res.status(500).json({ error: 'Internal Server Error', details: error.message });
+        }
+    } else {
+        return res.status(400).json({ error: 'Invalid type' });
     }
 });
 
