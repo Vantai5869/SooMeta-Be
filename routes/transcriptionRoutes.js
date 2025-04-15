@@ -103,6 +103,7 @@ router.get('/:id', async (req, res) => {
 // Cập nhật transcription
 router.put('/:id', async (req, res) => {
     const { type, url } = req.body;
+    console.log("=========================")
     console.log("🚀 ~ file: transcriptionRoutes.js:88 ~ router.put ~ type, url:", type, url);
     if (!type || !url) {
         return res.status(400).json({ error: 'Missing required fields' });
