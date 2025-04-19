@@ -219,22 +219,58 @@ export const sendAudioToDeepgram = async (filePath) => {
 };
 
 
-import { AssemblyAI} from 'assemblyai';
+import { AssemblyAI } from 'assemblyai';
 
 const client = new AssemblyAI({
     apiKey: '674d42163f3a448ea246cc6b877a4eac',
 });
 
-export const getTranscript = async (audio, language_code='ko') => {
-    // audio la link online/ link off
+export const getTranscript = async (audio, language_code = 'ko') => {
+    // Cấu hình yêu cầu phiên âm
     const data = {
-        // language_code: language_code,
         language_detection: true,
-        audio: audio
+        audio: audio,
+        word_boost: [], // Có thể thêm từ cần ưu tiên nếu muốn
+        auto_highlights: false // Tắt auto_highlights vì không dùng
+    };
+
+    // Gửi yêu cầu phiên âm
+    const transcript = await client.transcripts.transcribe(data);
+
+    // Lấy sentences và words
+    const { sentences } = await client.transcripts.sentences(transcript.id);
+    const transcriptDetails = await client.transcripts.get(transcript.id);
+    const words = transcriptDetails.words || [];
+
+    // Chia sentences thành các đoạn ngắn hơn
+    const maxWordsPerSegment = 8; // Tối đa 8 từ mỗi đoạn
+    const segments = [];
+
+    for (const sentence of sentences) {
+        // Lấy các từ thuộc câu này
+        const sentenceWords = words.filter(word => 
+            word.start >= sentence.start && word.end <= sentence.end
+        );
+
+        // Nhóm words thành các đoạn ngắn
+        let currentWords = [];
+        for (let i = 0; i < sentenceWords.length; i++) {
+            currentWords.push(sentenceWords[i]);
+            if (currentWords.length >= maxWordsPerSegment || i === sentenceWords.length - 1) {
+                segments.push({
+                    start: currentWords[0].start,
+                    end: currentWords[currentWords.length - 1].end,
+                    words: currentWords.map(word => ({
+                        text: word.text,
+                        start: word.start,
+                        end: word.end
+                    }))
+                });
+                currentWords = [];
+            }
+        }
     }
 
-    const transcript = await client.transcripts.transcribe(data);
-    const { sentences } = await client.transcripts.sentences(transcript.id)
-    // const { paragraphs } = await client.transcripts.paragraphs(transcript.id)
-    return sentences;
-}
+    // Trả về định dạng tương thích với Flutter
+    return { data: segments };
+};
