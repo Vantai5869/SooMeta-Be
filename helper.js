@@ -269,5 +269,5 @@ export const getTranscript = async (audio, language_code = 'ko') => {
     }
 
     // Trả về định dạng tương thích với Flutter
-    return { data: segments };
+    return segments;
 };
