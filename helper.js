@@ -260,11 +260,8 @@ export const getTranscript = async (audio, language_code = 'ko') => {
                 segments.push({
                     start: currentWords[0].start,
                     end: currentWords[currentWords.length - 1].end,
-                    words: currentWords.map(word => ({
-                        text: word.text,
-                        start: word.start,
-                        end: word.end
-                    }))
+                    text: currentWords.map(word => word.text).join(' ').trim(),
+                    words: currentWords
                 });
                 currentWords = [];
             }
