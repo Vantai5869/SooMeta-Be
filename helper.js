@@ -231,7 +231,7 @@ const cleanResponse = (text) => {
 };
 
 // Hàm tách câu dài thành các câu ngắn hơn dựa trên mảng words
-export const splitLongSentences = async (sentences, maxWords = 20) => {
+export const splitLongSentences = async (sentences, maxWords = 12) => {
   const result = [];
 
   for (const sentence of sentences) {

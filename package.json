@@ -13,6 +13,7 @@
   "description": "",
   "dependencies": {
     "@distube/ytdl-core": "^4.16.4",
+    "@google/generative-ai": "^0.24.0",
     "assemblyai": "^4.9.0",
     "axios": "^1.7.9",
     "axios-retry": "^4.5.0",
