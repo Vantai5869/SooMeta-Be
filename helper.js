@@ -218,6 +218,81 @@ export const sendAudioToDeepgram = async (filePath) => {
   }
 };
 
+// GEMINI API
+import { GoogleGenerativeAI } from "@google/generative-ai";
+
+// Khởi tạo Gemini API
+const genAI = new GoogleGenerativeAI("AIzaSyAD-DPPuCS-rdQjR-qqmrlh6jwF5c7An0Y"); // Thay bằng API key của bạn
+const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+
+// Hàm làm sạch phản hồi từ Gemini
+const cleanResponse = (text) => {
+  return text.replace(/```json\n|```|\n/g, "").trim();
+};
+
+// Hàm tách câu dài thành các câu ngắn hơn dựa trên mảng words
+export const splitLongSentences = async (sentences, maxWords = 20) => {
+  const result = [];
+
+  for (const sentence of sentences) {
+    const wordCount = sentence.words.length;
+
+    // Nếu câu ngắn hơn ngưỡng, giữ nguyên
+    if (wordCount <= maxWords) {
+      result.push(sentence);
+      continue;
+    }
+
+    // Nếu câu quá dài, gửi tới Gemini để tìm điểm tách
+    const wordList = sentence.words.map((word) => word.text).join(" ");
+    const prompt = `
+      You are a text processing assistant. Given a sentence, suggest how to split it into shorter sentences, each with no more than ${maxWords} words, using only the original words in the exact order, without adding or modifying any words. Return the result as a JSON array of arrays, where each inner array contains the indices of words (from the original word list) that form a shorter sentence. Ensure the split sentences are semantically coherent.
+
+      Sentence: "${wordList}"
+      Word list: ${JSON.stringify(sentence.words.map((word) => word.text))}
+
+      Example input: "The quick brown fox jumps over the lazy dog and runs to the forest to hunt for food."
+      Example word list: ["The", "quick", "brown", "fox", "jumps", "over", "the", "lazy", "dog", "and", "runs", "to", "the", "forest", "to", "hunt", "for", "food"]
+      Example output: [[0, 9], [10, 14], [15, 17]]
+
+      Return only the JSON array of index ranges.
+    `;
+
+    try {
+      const geminiResult = await model.generateContent(prompt);
+      const responseText = cleanResponse(await geminiResult.response.text());
+      const splitIndices = JSON.parse(responseText); // Mảng các [startIndex, endIndex]
+
+      // Tạo các câu mới từ indices
+      const newSentences = splitIndices.map(([startIndex, endIndex]) => {
+        const newWords = sentence.words.slice(startIndex, endIndex + 1);
+        const newText = newWords.map((word) => word.text).join(" ");
+        const start = newWords[0].start;
+        const end = newWords[newWords.length - 1].end;
+        const confidence = newWords.reduce((sum, word) => sum + word.confidence, 0) / newWords.length;
+
+        return {
+          text: newText,
+          start: Math.round(start),
+          end: Math.round(end),
+          confidence: Number(confidence.toFixed(2)),
+          words: newWords,
+        };
+      });
+
+      result.push(...newSentences);
+    } catch (error) {
+      console.error("Error splitting sentence:", sentence.text, error);
+      result.push(sentence); // Nếu lỗi, giữ nguyên câu
+    }
+  }
+
+  return result;
+};
+
+
+
+// AssemblyAI API
 
 import { AssemblyAI } from 'assemblyai';
 
@@ -268,6 +343,7 @@ export const getTranscript = async (audio, language_code = 'ko') => {
         }
     }
 
+    const dataRes = await splitLongSentences(segments, 10);
     // Trả về định dạng tương thích với Flutter
-    return segments;
+    return dataRes;
 };
