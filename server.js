@@ -29,6 +29,9 @@ app.post('/send-mail', async (req, res) => {
   }
   const transporter = nodemailer.createTransport({
     service: 'gmail',
+    host: 'smtp.gmail.com',
+    port: 587,
+    secure: false, // true for 465, false for other ports
     auth: {
       user: process.env.EMAIL,
       pass: process.env.PASSWORD,
@@ -37,22 +40,40 @@ app.post('/send-mail', async (req, res) => {
 
   // Cấu hình email
   const mailOptions = {
-    from: process.env.EMAIL,
+    from: `"SooMeta Team" <${process.env.EMAIL}>`, // Thêm tên người gửi để tăng độ tin cậy
     to: email,
-    subject: 'Xin chào từ SooMeta',
+    subject: 'Xác nhận tài khoản từ SooMeta', // Chủ đề rõ ràng, tránh từ như "Xin chào"
     html: `
-        <h1>Xin chào từ SooMeta</h1>
-<p>Cảm ơn bạn đã sử dụng dịch vụ của chúng tôi. Mã xác nhận của bạn là:</p>
-<h2 style="color: blue;">${code}</h2>
-<p>Vui lòng sử dụng mã này trong vòng 10 phút để hoàn tất quá trình xác nhận.</p>
-<p>Nếu bạn không yêu cầu mã này, vui lòng bỏ qua email này.</p>
-<hr>
-<footer>
-  <p>© 2025 SooMeta. Địa chỉ: 123 Đường ABC, TP. HCM.</p>
-  <p>Liên hệ: soomain.tp@gmail.com</p>
-</footer>
-      `, // Sử dụng HTML để hiển thị mã xác nhận
-  };
+        <!DOCTYPE html>
+        <html lang="vi">
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <style>
+                body { font-family: Arial, sans-serif; color: #333; line-height: 1.6; }
+                .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+                .code { color: #0055ff; font-size: 24px; font-weight: bold; }
+                .footer { font-size: 12px; color: #777; margin-top: 20px; }
+                a { color: #0055ff; text-decoration: none; }
+            </style>
+        </head>
+        <body>
+            <div class="container">
+                <h2>Xin chào,</h2>
+                <p>Cảm ơn bạn đã sử dụng dịch vụ của SooMeta. Dưới đây là mã xác nhận để hoàn tất quá trình đăng ký hoặc đăng nhập:</p>
+                <p class="code">${code}</p>
+                <p>Mã này có hiệu lực trong vòng 10 phút. Vui lòng nhập mã vào ứng dụng hoặc trang web của chúng tôi để tiếp tục.</p>
+                <p>Nếu bạn không yêu cầu mã này, xin vui lòng bỏ qua email này hoặc liên hệ với chúng tôi tại <a href="mailto:soomain.tp@gmail.com">soomain.tp@gmail.com</a>.</p>
+                <div class="footer">
+                    <p>Trân trọng,<br>Đội ngũ SooMeta</p>
+                    <p>© 2025 SooMeta. Mọi quyền được bảo lưu.</p>
+                </div>
+            </div>
+        </body>
+        </html>
+    `,
+    text: `Xin chào,\n\nCảm ơn bạn đã sử dụng dịch vụ của SooMeta. Mã xác nhận của bạn là: ${code}\n\nMã này có hiệu lực trong vòng 10 phút. Vui lòng nhập mã vào ứng dụng hoặc trang web của chúng tôi để tiếp tục.\n\nNếu bạn không yêu cầu mã này, xin vui lòng bỏ qua email này hoặc liên hệ với chúng tôi tại soomain.tp@gmail.com.\n\nTrân trọng,\nĐội ngũ SooMeta\n© 2025 SooMeta. Mọi quyền được bảo lưu.` // Thêm phiên bản text để tăng khả năng tương thích
+};
 
   transporter.sendMail(mailOptions, (error, info) => {
     if (error) {
