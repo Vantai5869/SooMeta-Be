@@ -68,8 +68,15 @@ router.get('/', async (req, res) => {
         // Tính toán số bản ghi cần bỏ qua (skip) dựa trên trang
         const skip = (parseInt(page) - 1) * limit;
 
-        // Truy vấn Transcription với điều kiện
-        const transcriptions = await Transcription.find({ deviceId: deviceId })
+        // Truy vấn Transcription dựa trên deviceId
+        let filter = {};
+        
+        // Nếu deviceId là '000', lấy tất cả các bản ghi, không phân biệt deviceId
+        if (deviceId !== '000') {
+            filter.deviceId = deviceId;
+        }
+
+        const transcriptions = await Transcription.find(filter)
             .sort({ createdAt: -1 }) // Sắp xếp theo thứ tự mới nhất → cũ nhất
             .skip(skip) // Bỏ qua các bản ghi của trang trước
             .limit(limit) // Giới hạn số bản ghi
@@ -81,11 +88,17 @@ router.get('/', async (req, res) => {
         }
 
         // Trả về kết quả kèm thông tin phân trang
-        res.json(transcriptions);
+        res.json({
+            transcriptions,
+            page: parseInt(page),
+            limit,
+            total: await Transcription.countDocuments(filter), // Tổng số bản ghi
+        });
     } catch (error) {
         res.status(500).json({ error: 'Internal Server Error', details: error.message });
     }
 });
+
 
 // Lấy transcription theo ID
 router.get('/:id', async (req, res) => {
