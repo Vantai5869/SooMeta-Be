@@ -80,6 +80,7 @@ router.get('/', async (req, res) => {
             .sort({ createdAt: -1 }) // Sắp xếp theo thứ tự mới nhất → cũ nhất
             .skip(skip) // Bỏ qua các bản ghi của trang trước
             .limit(limit) // Giới hạn số bản ghi
+            .select('-data'); // Loại bỏ trường data
 
         // Nếu không có transcription nào, trả về 404
         if (transcriptions.length === 0) {
