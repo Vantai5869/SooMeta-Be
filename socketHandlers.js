@@ -6,104 +6,113 @@ import { v4 as uuidv4 } from 'uuid';
 const connectedUsers = new Map();
 
 function broadcastVisitorData(io) {
+  const allUsersArray = Array.from(connectedUsers.values());
+  
+  // Lọc ra chỉ những người dùng không phải là admin để hiển thị cho admin
+  // Hoặc bạn có thể gửi tất cả và để client admin tự lọc
+  const publicUsers = allUsersArray.filter(user => user.type !== 'admin');
+
   const visitorData = {
-    count: connectedUsers.size,
-    users: Array.from(connectedUsers.values()).map(user => ({
+    count: publicUsers.length, // Số lượng người dùng thực tế (không tính admin)
+    users: publicUsers.map(user => ({ // Chỉ gửi thông tin của người dùng không phải admin
         id: user.id,
         displayInfo: user.displayInfo,
         connectedAt: user.connectedAt,
-        ip: user.ip, // Thêm IP nếu muốn hiển thị
-        // Thêm các thông tin khác nếu server có
+        ip: user.ip,
+        type: user.type,
     })),
+    // totalConnections: allUsersArray.length, // Nếu admin muốn xem cả tổng số kết nối
   };
-  // Gửi dữ liệu tới tất cả các client đang kết nối
+  // Gửi dữ liệu tới tất cả các client đang kết nối (hoặc tới một room 'admins' cụ thể)
   io.emit('VISITOR_DATA', visitorData);
 }
 
-// Middleware xác thực cho Socket.IO (ví dụ, bạn cần hoàn thiện logic này)
+// Middleware xác thực (ví dụ)
 // const authenticateSocket = (socket, next) => {
 //   const token = socket.handshake.auth.token;
-//   // Hoặc: const token = socket.handshake.headers['x-auth-token'];
-
-//   // Ví dụ logic kiểm tra token (thay thế bằng logic thực tế của bạn)
-//   // import jwt from 'jsonwebtoken';
-//   // if (token) {
-//   //   try {
-//   //     const decoded = jwt.verify(token, process.env.JWT_SECRET); // JWT_SECRET từ .env
-//   //     socket.userData = decoded; // Gắn thông tin user đã giải mã vào socket object
-//   //     return next();
-//   //   } catch (err) {
-//   //     console.error("Socket authentication error:", err.message);
-//   //     return next(new Error('Authentication error: Invalid token'));
-//   //   }
+//   // ... (logic xác thực token của bạn)
+//   // if (valid) {
+//   //   socket.userData = decodedToken;
+//   //   next();
 //   // } else {
-//   //   return next(new Error('Authentication error: No token provided'));
+//   //   next(new Error('Authentication error'));
 //   // }
-//   // Bỏ qua xác thực cho ví dụ này, cho phép tất cả kết nối
-//    next();
+//   next(); // Bỏ qua xác thực cho ví dụ này
 // };
 
-
 export default function initializeSocketIO(io) {
-  // Áp dụng middleware xác thực (nếu có)
-  // io.use(authenticateSocket);
+  // io.use(authenticateSocket); // Áp dụng middleware nếu có
 
   io.on('connection', (socket) => {
-    // Thông tin người dùng mặc định khi mới kết nối
+    console.log(`Client connected: ${socket.id}, IP: ${socket.handshake.address}`);
+
+    // Thông tin người dùng mặc định, sẽ được cập nhật
     let userDetails = {
       id: socket.id,
-      displayInfo: `Guest-${socket.id.substring(0, 6)}`,
-      ip: socket.handshake.address, // Địa chỉ IP của client
+      displayInfo: `Connecting-${socket.id.substring(0, 6)}`,
+      ip: socket.handshake.address,
       connectedAt: new Date().toISOString(),
+      type: 'unknown', // Sẽ được cập nhật thành 'guest', 'user', hoặc 'admin'
     };
+    connectedUsers.set(socket.id, userDetails); // Thêm vào map ngay, sẽ cập nhật sau
 
-    // Nếu bạn dùng middleware xác thực và đã gắn userData vào socket:
-    // if (socket.userData) {
-    //   userDetails.id = socket.userData.userId || socket.id; // Ưu tiên userId từ token
-    //   userDetails.displayInfo = socket.userData.email || socket.userData.name || `User-${socket.userData.userId.substring(0,6)}`;
-    //   userDetails.role = socket.userData.role; // Lưu vai trò nếu cần
-    // }
-
-    connectedUsers.set(socket.id, userDetails);
-    console.log(`Client ${userDetails.displayInfo} (ID: ${socket.id}, IP: ${userDetails.ip}) connected. Total: ${connectedUsers.size}`);
-
-    broadcastVisitorData(io); // Gửi dữ liệu cập nhật cho tất cả client
-
-    // Lắng nghe sự kiện 'USER_IDENTIFIED' từ client (ví dụ: admin gửi thông tin của họ)
-    socket.on('USER_IDENTIFIED', (data) => {
-      const currentUserDetails = connectedUsers.get(socket.id);
-      if (currentUserDetails && data) {
-        // Chỉ cập nhật nếu thông tin được cung cấp và khác với thông tin mặc định
-        // hoặc nếu đây là thông tin từ người dùng đã xác thực (ví dụ: admin)
-        currentUserDetails.id = data.userId || currentUserDetails.id;
-        currentUserDetails.displayInfo = data.name || `User-${(data.userId || socket.id).substring(0,6)}`;
-        // currentUserDetails.role = data.role; // Cập nhật vai trò
-        
-        connectedUsers.set(socket.id, currentUserDetails);
-        console.log(`User ${socket.id} identified as ${currentUserDetails.displayInfo}`);
-        broadcastVisitorData(io); // Cập nhật lại cho mọi người
+    // Admin tự định danh
+    socket.on('USER_IDENTIFIED', (data) => { // Cho ADMIN
+      const adminDetails = connectedUsers.get(socket.id);
+      if (adminDetails && data) {
+        adminDetails.id = data.userId || adminDetails.id;
+        adminDetails.displayInfo = data.name || `Admin-${(data.userId || socket.id).substring(0,6)}`;
+        adminDetails.type = 'admin'; // Đánh dấu là admin
+        connectedUsers.set(socket.id, adminDetails);
+        console.log(`Admin ${socket.id} identified as ${adminDetails.displayInfo}`);
+        // Không broadcast ở đây, vì admin không nên nằm trong danh sách "visitor" cho chính họ xem
+        // broadcastVisitorData(io) sẽ được gọi khi người dùng thường kết nối/ngắt kết nối
       }
     });
+
+    // Người dùng từ trang chủ kết nối
+    socket.on('USER_CAME_ONLINE', (data) => { // Cho người dùng TRANG CHỦ
+      const homepageUserDetails = connectedUsers.get(socket.id);
+      if (homepageUserDetails && data) {
+        homepageUserDetails.id = data.userId || socket.id; // Nếu là user đã login, dùng userId
+        homepageUserDetails.displayInfo = data.name || (data.type === 'guest' ? `Guest-${socket.id.substring(0,6)}` : `User-${(data.userId || socket.id).substring(0,6)}`);
+        homepageUserDetails.type = data.type || 'user'; // 'guest' hoặc 'user' (đã login)
+        
+        connectedUsers.set(socket.id, homepageUserDetails);
+        console.log(`Homepage ${homepageUserDetails.type} ${socket.id} came online as ${homepageUserDetails.displayInfo}`);
+        broadcastVisitorData(io); // Cập nhật cho admin
+      }
+    });
+    
+    // Gửi thông tin ban đầu sau một khoảng trễ nhỏ để chờ USER_CAME_ONLINE hoặc USER_IDENTIFIED
+    // Hoặc client tự yêu cầu dữ liệu ban đầu nếu cần.
+    // Trong trường hợp này, broadcastVisitorData() sẽ được gọi bởi USER_CAME_ONLINE.
+    // Nếu không có event nào được gửi từ client, client đó vẫn được tính là 'unknown'
+    // và sẽ được broadcast.
+    // console.log(`Initial broadcast after client ${socket.id} connected.`);
+    // broadcastVisitorData(io); // Cân nhắc việc gọi ở đây hoặc chỉ dựa vào event từ client
+
 
     socket.on('disconnect', (reason) => {
       const disconnectedUser = connectedUsers.get(socket.id);
       if (disconnectedUser) {
-          console.log(`Client ${disconnectedUser.displayInfo} (ID: ${socket.id}) disconnected. Reason: ${reason}. Total: ${connectedUsers.size - 1 }`);
+          console.log(`Client ${disconnectedUser.displayInfo} (ID: ${socket.id}, Type: ${disconnectedUser.type}) disconnected. Reason: ${reason}.`);
+          connectedUsers.delete(socket.id);
+          // Chỉ broadcast nếu người ngắt kết nối không phải là admin,
+          // hoặc nếu bạn muốn admin cũng biết các admin khác online/offline
+          if (disconnectedUser.type !== 'admin') {
+            broadcastVisitorData(io);
+          }
       } else {
-          console.log(`Client ${socket.id} disconnected. Reason: ${reason}.`);
+          console.log(`Client ${socket.id} (unknown type) disconnected. Reason: ${reason}.`);
+          connectedUsers.delete(socket.id); // Xóa nếu có trong map
+          broadcastVisitorData(io); // Vẫn broadcast vì có thể là user chưa kịp định danh
       }
-      connectedUsers.delete(socket.id);
-      broadcastVisitorData(io);
     });
 
     socket.on('error', (error) => {
       console.error(`Socket.IO error for client ${socket.id}:`, error);
     });
-
-    // Thêm các trình xử lý sự kiện Socket.IO khác ở đây nếu cần
-    // socket.on('chat_message', (msg) => {
-    //   io.emit('chat_message', msg); // Ví dụ: broadcast tin nhắn chat
-    // });
   });
 
   console.log('Socket.IO initialized and listening for connections.');
