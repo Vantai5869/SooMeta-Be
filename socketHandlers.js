@@ -17,6 +17,7 @@ function broadcastVisitorData(io) {
     users: publicUsers.map(user => ({ // Chỉ gửi thông tin của người dùng không phải admin
         id: user.id,
         displayInfo: user.displayInfo,
+        email: user.email, // << Quan trọng: Server cần gửi trường này
         connectedAt: user.connectedAt,
         ip: user.ip,
         type: user.type,
