@@ -3,7 +3,7 @@ import mongoose from "mongoose";
 const userSchema = new mongoose.Schema({
   email: { type: String, required: true, unique: true },
   deviceId: { type: String, required: true },
-  platform: { type: String, enum: ['iOS', 'Android'], required: true },
+  platform: { type: String, enum: ['iOS', 'Android','WEB'], required: true },
   createdAt: { type: Date, default: Date.now },
   role: { type: String, default: 'user' },
   isActive: { type: Boolean, default: true },
