@@ -61,13 +61,13 @@ router.post('/', async (req, res) => {
             message,
             token,
             user: {
-                id: user.id,
+                _id: user.id,
                 email: user.email,
-                deviceId: user.deviceId,
-                platform: user.platform,
-                role: user.role,
-                isActive: user.isActive,
-                lastLogin: user.lastLogin,
+                // deviceId: user.deviceId,
+                // platform: user.platform,
+                // role: user.role,
+                // isActive: user.isActive,
+                // lastLogin: user.lastLogin,
             },
         });
 

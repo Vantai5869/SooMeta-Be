@@ -8,6 +8,8 @@ import http from 'http'; // Thêm import http
 import { Server as SocketIOServer } from 'socket.io'; // Import Server từ socket.io
 
 import userRoutes from './routes/userRoutes.js';
+import examSessionsRoutes from './routes/examSessionsRoutes.js';
+import vocabularyRoutes from './routes/vocabularyRoutes.js';
 import uploadRoutes from './routes/uploadRoutes.js';
 import transcriptionRoutes from './routes/transcriptionRoutes.js';
 import uploadFileToCloudRoutes from './routes/uploadFileToCloudRoutes.js';
@@ -44,7 +46,8 @@ app.use('/users', userRoutes);
 app.use('/upload', uploadRoutes);
 app.use('/transcriptions', transcriptionRoutes);
 app.use('/upload-file-cloud', uploadFileToCloudRoutes);
-
+app.use('/exam-sessions', examSessionsRoutes);
+app.use('/vocabulary', vocabularyRoutes);
 app.post('/send-mail', async (req, res) => {
   const { email, code } = req.body;
 
