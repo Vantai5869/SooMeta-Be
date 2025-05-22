@@ -10,9 +10,11 @@ import { Server as SocketIOServer } from 'socket.io'; // Import Server từ sock
 import userRoutes from './routes/userRoutes.js';
 import examSessionsRoutes from './routes/examSessionsRoutes.js';
 import vocabularyRoutes from './routes/vocabularyRoutes.js';
+import feedbackRoutes from './routes/feedbackRoutes.js';
 import uploadRoutes from './routes/uploadRoutes.js';
 import transcriptionRoutes from './routes/transcriptionRoutes.js';
 import uploadFileToCloudRoutes from './routes/uploadFileToCloudRoutes.js';
+import progressStatsRoutes from './routes/progressStatsRoutes.js';
 // import { AssemblyAI } from 'assemblyai'; // Bỏ comment nếu bạn dùng AssemblyAI ở đây
 import nodemailer from 'nodemailer';
 
@@ -48,6 +50,8 @@ app.use('/transcriptions', transcriptionRoutes);
 app.use('/upload-file-cloud', uploadFileToCloudRoutes);
 app.use('/exam-sessions', examSessionsRoutes);
 app.use('/vocabulary', vocabularyRoutes);
+app.use('/feedback', feedbackRoutes); 
+app.use('/progress-stats', progressStatsRoutes); 
 app.post('/send-mail', async (req, res) => {
   const { email, code } = req.body;
 
