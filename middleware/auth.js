@@ -48,7 +48,8 @@ const authMiddleware = async (req, res, next) => {
             id: userFromDb.id,
             email: userFromDb.email,
             role: userFromDb.role,
-            isActive: userFromDb.isActive
+            isActive: userFromDb.isActive,
+            subscriptionTier: userFromDb.subscriptionTier
             // Thêm các trường khác nếu cần
         };
 
