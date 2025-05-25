@@ -17,7 +17,7 @@
     "assemblyai": "^4.9.0",
     "axios": "^1.7.9",
     "axios-retry": "^4.5.0",
-    "cloudinary": "^2.6.1",
+    "cloudinary": "^1.41.3",
     "cors": "^2.8.5",
     "date-fns": "^4.1.0",
     "dotenv": "^16.4.7",
