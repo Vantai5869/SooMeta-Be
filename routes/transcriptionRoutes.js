@@ -62,8 +62,7 @@ router.get('/', async (req, res) => {
 
         // Kiểm tra xem deviceId có tồn tại hay không
         if (!deviceId) {
-            // return res.status(400).json({ error: 'Device ID is required' });
-            return res.json([]);
+            return res.status(400).json({ error: 'Device ID is required' });
         }
 
         // Tính toán số bản ghi cần bỏ qua (skip) dựa trên trang
