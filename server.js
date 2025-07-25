@@ -16,6 +16,8 @@ import transcriptionRoutes from './routes/transcriptionRoutes.js';
 import uploadFileToCloudRoutes from './routes/uploadFileToCloudRoutes.js';
 import progressStatsRoutes from './routes/progressStatsRoutes.js';
 import analyticsRoutes from './routes/analytics.js';
+import practiceHistoryRoutes from './routes/practiceHistoryRoutes.js';
+import downloadStatsRoutes from './routes/downloadStatsRoutes.js';
 import commentRoutes from './routes/commentRoutes.js';
 // import { AssemblyAI } from 'assemblyai'; // Bỏ comment nếu bạn dùng AssemblyAI ở đây
 import nodemailer from 'nodemailer';
@@ -55,6 +57,8 @@ app.use('/vocabulary', vocabularyRoutes);
 app.use('/feedback', feedbackRoutes); 
 app.use('/progress-stats', progressStatsRoutes); 
 app.use('/analytics', analyticsRoutes); 
+app.use('/practice-history', practiceHistoryRoutes);
+app.use('/download-stats', downloadStatsRoutes);
 app.use('/api/comments', commentRoutes);
 app.post('/send-mail', async (req, res) => {
   const { email, code } = req.body;

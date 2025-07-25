@@ -1,26 +1,26 @@
 import mongoose from "mongoose";
 
 const commentSchema = new mongoose.Schema({
-  examId: { 
-    type: String, 
-    required: true 
+  examId: {
+    type: String,
+    required: true
   },
-  userId: { 
-    type: mongoose.Schema.Types.ObjectId, 
-    ref: 'user', 
-    required: true 
+  userId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'user',
+    required: true
   },
-  userName: { 
-    type: String, 
-    required: true 
+  userName: {
+    type: String,
+    required: true
   },
-  userAvatar: { 
-    type: String, 
-    required: false 
+  userAvatar: {
+    type: String,
+    required: false
   },
-  content: { 
-    type: String, 
-    required: true, 
+  content: {
+    type: String,
+    required: true,
     maxlength: 1000 
   },
   parentId: {
@@ -32,9 +32,9 @@ const commentSchema = new mongoose.Schema({
     type: Number, 
     default: 0 
   },
-  likedBy: [{ 
-    type: mongoose.Schema.Types.ObjectId, 
-    ref: 'user' 
+  likedBy: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'user'
   }],
   replyCount: {
     type: Number,
